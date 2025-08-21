@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Starforge — Game Changelog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f1216" />
+  <meta name="description" content="Changelog for the Starforge game — features, fixes, balance and backend notes." />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== CSS RESET (modernized) ===== */
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    img,svg,video{display:block;max-width:100%}
+    button,input,select,textarea{font:inherit}
+    :root{
+      --bg: #0f1216;
+      --bg-soft:#12161c;
+      --panel:#151a21;
+      --panel-2:#0e1319;
+      --text:#e7ecf3;
+      --muted:#9aa7b5;
+      --accent:#66e0ff;
+      --accent-2:#8b7dff;
+      --danger:#ff6b6b;
+      --ok:#65d48c;
+      --warn:#ffcc66;
+      --outline: 2px solid #66e0ff88;
+
+      --card: #121821;
+      --chip:#192230;
+      --chip-text:#cfe6ff;
+
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --gap: 14px;
+      --maxw: 1200px;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f7f9fc;
+        --bg-soft:#eef3f9;
+        --panel:#ffffff;
+        --panel-2:#f6f8fb;
+        --text:#0f1825;
+        --muted:#5a6a7a;
+        --accent:#0077ff;
+        --accent-2:#6a5cff;
+        --card:#ffffff;
+        --chip:#e8f1ff;
+        --chip-text:#003a77;
+        --shadow: 0 10px 30px rgba(0,0,0,.08);
+      }
+    }
+    html[data-theme="light"]{color-scheme:light}
+    html[data-theme="dark"]{color-scheme:dark}
+
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 70% -10%, #1d2430 0%, transparent 60%) , var(--bg);
+      line-height:1.5;
+    }
+
+    /* ===== Layout ===== */
+    header{
+      position: sticky; top: 0; z-index: 20;
+      background: linear-gradient(180deg, rgba(0,0,0,.4), rgba(0,0,0,0)) , var(--panel-2);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .wrap{max-width:var(--maxw); margin-inline:auto; padding: 14px clamp(14px, 3vw, 24px);}
+    .bar{display:flex; gap:12px; align-items:center; justify-content:space-between}
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{
+      width:36px; aspect-ratio:1; border-radius:12px;
+      background: conic-gradient(from 180deg, var(--accent), var(--accent-2), var(--accent));
+      box-shadow: inset 0 0 30px rgba(255,255,255,.2), 0 8px 18px rgba(0,0,0,.25);
+    }
+    .title{font-weight:700; letter-spacing:.3px}
+    .title small{font-weight:500; color:var(--muted)}
+
+    .wrap-main{max-width:var(--maxw); margin-inline:auto; padding: 20px clamp(14px, 3vw, 24px) 120px;}
+    .layout{display:grid; grid-template-columns: 280px 1fr; gap: 24px;}
+    @media (max-width: 980px){
+      .layout{grid-template-columns: 1fr}
+      aside{order:2}
+    }
+
+    /* ===== Controls ===== */
+    .search{
+      position:relative; flex:1; max-width:540px;
+      display:flex; align-items:center; gap:8px;
+      background:var(--panel); border:1px solid rgba(255,255,255,.08);
+      border-radius:12px; padding:8px 12px; box-shadow:var(--shadow);
+    }
+    .search input{
+      border:0; outline:0; background:transparent; color:var(--text);
+      width:100%;
+    }
+    .kbd{font-size:.78rem; padding:2px 6px; border-radius:6px; border:1px solid rgba(255,255,255,.2); color:var(--muted)}
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+      color:var(--text); padding:8px 12px; border-radius:10px; cursor:pointer;
+      display:inline-flex; align-items:center; gap:8px; transition:.2s transform;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{border-color:transparent; background: linear-gradient(180deg, var(--accent), var(--accent-2)); color:#051018; font-weight:700}
+    .btn.ghost{background:transparent}
+    .btn.toggle[aria-pressed="true"]{outline: var(--outline); outline-offset:2px}
+
+    /* ===== Sidebar ===== */
+    aside{
+      position:relative;
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius);
+      padding:16px; box-shadow:var(--shadow);
+    }
+    aside h3{margin:8px 0 4px 0; font-size:1rem}
+    .filter-group{display:grid; gap:8px; margin-bottom:14px}
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{
+      background:var(--chip); color:var(--chip-text);
+      border:none; border-radius:999px; padding:6px 10px; cursor:pointer; transition:.15s;
+    }
+    .chip[aria-pressed="true"]{outline: var(--outline); outline-offset:2px}
+    .muted{color:var(--muted)}
+    .range{display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center}
+    .range input[type="date"]{background:var(--panel-2); color:var(--text); border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:6px 8px}
+
+    /* ===== Timeline / Cards ===== */
+    .timeline{display:grid; gap:16px}
+    .version{
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .version-header{
+      padding:14px 16px; display:flex; justify-content:space-between; align-items:center;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0));
+    }
+    .v-meta{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .badge{
+      font-size:.78rem; padding:4px 8px; border-radius:999px;
+      background:#1b2430; color:#bcd0ff; border:1px solid rgba(255,255,255,.08)
+    }
+    .tag{font-size:.78rem; padding:2px 8px; border-radius:6px; border:1px solid rgba(255,255,255,.1)}
+    .tag.new{background:linear-gradient(180deg, #0e2b1a, #0a1f13); color:#9ee7b7; border-color:#174a2d}
+    .tag.fix{background:linear-gradient(180deg, #2b0e0e, #1c0a0a); color:#ffb8b8; border-color:#4a1717}
+    .tag.change{background:linear-gradient(180deg, #1a1a2b, #0e0e1c); color:#c8c6ff; border-color:#23234a}
+    .tag.balance{background:linear-gradient(180deg, #2b260e, #1a1709); color:#ffe9a8; border-color:#4a4017}
+    .entries{display:grid; gap:10px; padding:10px 16px 16px}
+    .entry{
+      background:var(--card);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:12px; padding:12px; position:relative;
+    }
+    .entry header{display:flex; gap:10px; align-items:center; position:relative}
+    .entry .type{
+      width:10px; height:10px; border-radius:50%;
+      background:var(--accent)
+    }
+    .entry[data-kind="fix"] .type{background:var(--danger)}
+    .entry[data-kind="new"] .type{background:var(--ok)}
+    .entry[data-kind="balance"] .type{background:var(--warn)}
+    .entry h4{margin:0; font-size:1rem}
+    .entry .meta{font-size:.85rem; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap}
+    .entry .content{margin-top:8px}
+    .entry .labels{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+    .label{
+      font-size:.72rem; padding:3px 6px; border-radius:6px;
+      background:var(--chip); color:var(--chip-text); border:1px solid rgba(255,255,255,.08)
+    }
+    .entry .actions{
+      position:absolute; right:10px; top:10px; display:flex; gap:6px
+    }
+    .entry .actions button{background:transparent; border:1px solid rgba(255,255,255,.1); color:var(--muted); border-radius:8px; padding:4px 6px; cursor:pointer}
+    .entry[aria-expanded="false"] .content{display:none}
+    .entry[aria-expanded="false"] .toggle::after{content:"Show"}
+    .entry[aria-expanded="true"] .toggle::after{content:"Hide"}
+
+    /* ===== Empty / footer ===== */
+    .empty{
+      padding:32px; text-align:center; color:var(--muted);
+      border:1px dashed rgba(255,255,255,.15); border-radius:12px; background:var(--panel-2)
+    }
+    footer{
+      position:fixed; inset: auto 0 0 0; z-index:10;
+      background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.5)) , var(--panel-2);
+      border-top:1px solid rgba(255,255,255,.06);
+      backdrop-filter: blur(8px);
+    }
+    .foot{display:flex; gap:12px; align-items:center; justify-content:space-between}
+    .status-dot{width:10px; height:10px; border-radius:50%; background:var(--ok); box-shadow:0 0 10px var(--ok)}
+    .help{display:none}
+    @media (max-width:700px){ .help{display:block} }
+
+    /* ===== Animations ===== */
+    @keyframes pop{from{transform:scale(.98); opacity:0} to{transform:scale(1); opacity:1}}
+    .version,.entry{animation: pop .22s ease-out}
+    .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
+  </style>
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header>
+    <div class="wrap">
+      <div class="bar" role="banner">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="title">
+            <div>Starforge <span class="muted">Changelog</span></div>
+            <small id="buildInfo" class="muted">Build …</small>
+          </div>
+        </div>
+        <form class="search" role="search" id="searchForm" aria-label="Search changelog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.2-4.2M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="q" name="q" placeholder="Search by text, tag, ID… (press /)" autocomplete="off" />
+          <span class="kbd" aria-hidden="true">/</span>
+        </form>
+        <div class="actions">
+          <button class="btn ghost toggle" id="toggleTheme" aria-pressed="false" title="Toggle theme (t)">🌗 Theme</button>
+          <button class="btn primary" id="btnNew" title="Add entry (demo)">+ New Entry</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Main ===== -->
+  <main class="wrap-main">
+    <div class="layout" id="app">
+      <!-- Sidebar Filters -->
+      <aside aria-label="Filters">
+        <div class="filter-group">
+          <h3>Kinds</h3>
+          <div class="chips" id="kindChips" role="group" aria-label="Kinds"></div>
+        </div>
+        <div class="filter-group">
+          <h3>Platforms</h3>
+          <div class="chips" id="platformChips" role="group" aria-label="Platforms"></div>
+        </div>
+        <div class="filter-group">
+          <h3>Tags</h3>
+          <div class="chips" id="tagChips" role="group" aria-label="Tags"></div>
+        </div>
+        <div class="filter-group">
+          <h3>Date Range</h3>
+          <div class="range">
+            <input type="date" id="fromDate" aria-label="From date">
+            <button class="btn ghost" id="clearDates">Clear</button>
+          </div>
+          <div class="range">
+            <input type="date" id="toDate" aria-label="To date">
+            <span class="muted">UTC</span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <h3>View</h3>
+          <div class="chips">
+            <button class="chip" data-view="grouped" aria-pressed="true">Grouped by version</button>
+            <button class="chip" data-view="flat" aria-pressed="false">Flat timeline</button>
+          </div>
+        </div>
+        <div class="muted" id="filterHint">Filters sync to the URL for easy sharing. ✔️</div>
+      </aside>
+
+      <!-- Timeline -->
+      <section aria-live="polite" aria-busy="false" aria-label="Changelog">
+        <div id="timeline" class="timeline"></div>
+        <div id="empty" class="empty" hidden>
+          No entries match your filters. Try clearing some filters or expanding the date range.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer>
+    <div class="wrap foot">
+      <div class="muted"><span class="status-dot" aria-hidden="true"></span> Live service operational</div>
+      <div class="muted help">Press <span class="kbd">?</span> for help and shortcuts</div>
+      <div class="muted">© Starforge Studios</div>
+    </div>
+  </footer>
+
+  <!-- ===== Help Modal (minimal, accessible) ===== -->
+  <dialog id="helpDialog" aria-labelledby="helpTitle">
+    <h3 id="helpTitle">Shortcuts</h3>
+    <ul>
+      <li><b>/</b> focus search</li>
+      <li><b>f</b> toggle sidebar focus</li>
+      <li><b>t</b> toggle theme</li>
+      <li><b>?</b> open this help</li>
+      <li><b>Enter</b> on an entry toggles details</li>
+    </ul>
+    <form method="dialog"><button class="btn">Close</button></form>
+  </dialog>
+
+  <script>
+  ;(() => {
+    // ===== Mock Data: You can swap this with a JSON fetch from your backend =====
+    /** @typedef {Object} Entry */
+    const entries = [
+      {
+        id: 28,
+        version: "1.4.0",
+        date: "2025-08-19",
+        kind: "new",
+        platform: ["PC","Xbox","PlayStation"],
+        title: "New Co-op Raid: The Obsidian Vault",
+        summary: "Four-player endgame raid with new mechanics and rewards.",
+        details: "Features two wings, environmental hazards, and a final boss with stagger checks. Weekly challenge modifiers rotate.",
+        tags: ["raid","endgame","pve","matchmaking"],
+      },
+      {
+        id: 27,
+        version: "1.4.0",
+        date: "2025-08-19",
+        kind: "change",
+        platform: ["PC","Xbox","PlayStation"],
+        title: "HUD customization",
+        summary: "Drag-and-drop widgets with per-profile saves.",
+        details: "Added snap grid, colorblind profiles, and streaming overlay mode.",
+        tags: ["ui","accessibility","streaming"]
+      },
+      {
+        id: 26,
+        version: "1.4.0",
+        date: "2025-08-19",
+        kind: "fix",
+        platform: ["PC"],
+        title: "Fixed crash on Vulkan + HDR",
+        summary: "Resolved a driver negotiation issue on specific GPUs.",
+        details: "We now gate HDR swapchain path behind capability checks and added a fallback to 10-bit FP.",
+        tags: ["graphics","vulkan","hdr","stability"]
+      },
+      {
+        id: 25,
+        version: "1.3.2",
+        date: "2025-07-30",
+        kind: "balance",
+        platform: ["PC","Xbox","PlayStation"],
+        title: "Weapon Balance Pass — Pulse Rifles",
+        summary: "Tighter recoil and +7% base damage in PvE.",
+        details: "Reduced vertical climb by 12%, ADS bloom reduced, minor hip-fire accuracy buff.",
+        tags: ["balance","weapons","pve"]
+      },
+      {
+        id: 24,
+        version: "1.3.2",
+        date: "2025-07-30",
+        kind: "fix",
+        platform: ["PC","Xbox"],
+        title: "Match rejoin edge case",
+        summary: "Players could get stuck in a loop on reconnect.",
+        details: "Handled missing session token + added retry backoff for party service.",
+        tags: ["netcode","multiplayer","stability"]
+      },
+      {
+        id: 23,
+        version: "1.3.0",
+        date: "2025-07-05",
+        kind: "new",
+        platform: ["PC","Xbox","PlayStation","Switch"],
+        title: "Photo Mode",
+        summary: "Cinematic camera with depth of field and LUTs.",
+        details: "Hotkeys: H (hide UI), F8 (toggle), arrow keys to orbit, mouse wheel to zoom.",
+        tags: ["ui","photo","creator"]
+      },
+      {
+        id: 22,
+        version: "1.2.5",
+        date: "2025-06-18",
+        kind: "change",
+        platform: ["PC"],
+        title: "Dedicated server scaling",
+        summary: "Better shard rebalance and ghost cleanup.",
+        details: "Moved to lease-based ownership and added sleepy shard eviction.",
+        tags: ["backend","server","ops"]
+      },
+      {
+        id: 21,
+        version: "1.2.4",
+        date: "2025-06-01",
+        kind: "fix",
+        platform: ["PC","Xbox","PlayStation"],
+        title: "Controller aim assist spike",
+        summary: "Removed unintended close-range stickiness.",
+        details: "Window now scales with target velocity to reduce over-correction.",
+        tags: ["controller","pvp","input"]
+      },
+      {
+        id: 20,
+        version: "1.2.0",
+        date: "2025-05-20",
+        kind: "new",
+        platform: ["PC"],
+        title: "Modding Hooks (Experimental)",
+        summary: "Scripts can register pre/post events for entities.",
+        details: "Sandboxed WASM env with capability tokens. Use at your own risk.",
+        tags: ["modding","experimental","wasm","scripting"]
+      }
+    ].sort((a,b)=>b.id-a.id);
+
+    // ===== Utilities =====
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const byId = id => document.getElementById(id);
+    const unique = arr => [...new Set(arr.flat())];
+    const fmtDate = d => new Date(d + 'T00:00:00Z').toLocaleDateString(undefined, {year:'numeric', month:'short', day:'2-digit'});
+    const encode = o => encodeURIComponent(JSON.stringify(o));
+    const decode = s => { try { return JSON.parse(decodeURIComponent(s)) } catch { return null } };
+
+    // ===== State (URL-driven) =====
+    const defaultState = {
+      q: "",
+      kinds: [],
+      platforms: [],
+      tags: [],
+      from: "",
+      to: "",
+      view: "grouped", // "grouped" | "flat"
+      theme: (localStorage.getItem("theme")) || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+    };
+    let state = {...defaultState, ...loadStateFromUrl()};
+    applyTheme(state.theme);
+
+    // ===== Build Static UI Bits =====
+    byId('buildInfo').textContent = `Build ${entries[0].version} — ${fmtDate(entries.find(e=>e.version===entries[0].version).date)}`;
+
+    const kinds = unique(entries.map(e=>e.kind));
+    const platforms = unique(entries.map(e=>e.platform));
+    const tags = unique(entries.map(e=>e.tags));
+
+    renderChips('kindChips', kinds, 'kinds');
+    renderChips('platformChips', platforms, 'platforms');
+    renderChips('tagChips', tags, 'tags');
+
+    // Pre-fill search + dates from state
+    byId('q').value = state.q;
+    byId('fromDate').value = state.from;
+    byId('toDate').value = state.to;
+    // View chips
+    $$('.chips .chip[data-view]').forEach(btn=>{
+      btn.setAttribute('aria-pressed', String(btn.dataset.view === state.view));
+      btn.addEventListener('click', ()=>{
+        state.view = btn.dataset.view;
+        $$('.chips .chip[data-view]').forEach(b=>b.setAttribute('aria-pressed','false'));
+        btn.setAttribute('aria-pressed','true');
+        syncUrl(); render();
+      });
+    });
+
+    // ===== Event Wiring =====
+    byId('searchForm').addEventListener('submit', e => { e.preventDefault(); });
+    byId('q').addEventListener('input', (e)=> { state.q = e.target.value.trim(); syncUrl(); render(); });
+    byId('fromDate').addEventListener('change', e=>{ state.from = e.target.value; syncUrl(); render(); });
+    byId('toDate').addEventListener('change', e=>{ state.to = e.target.value; syncUrl(); render(); });
+    byId('clearDates').addEventListener('click', ()=>{ byId('fromDate').value = ""; byId('toDate').value=""; state.from=""; state.to=""; syncUrl(); render(); });
+
+    byId('toggleTheme').addEventListener('click', ()=>{
+      state.theme = (state.theme === "dark") ? "light" : "dark";
+      applyTheme(state.theme);
+      localStorage.setItem("theme", state.theme);
+      byId('toggleTheme').setAttribute('aria-pressed', String(state.theme==="light"));
+    });
+    byId('toggleTheme').setAttribute('aria-pressed', String(state.theme==="light"));
+
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === '/' && e.target === document.body){ e.preventDefault(); byId('q').focus(); }
+      if (e.key.toLowerCase() === 't'){ byId('toggleTheme').click(); }
+      if (e.key.toLowerCase() === 'f'){ $('aside').scrollIntoView({behavior:'smooth', block:'nearest'}); }
+      if (e.key === '?'){ byId('helpDialog').showModal(); }
+    });
+
+    byId('btnNew').addEventListener('click', ()=> {
+      // Demo addition: in real app, open a form. Here we append an example entry and re-render.
+      const maxId = entries.reduce((m,e)=>Math.max(m,e.id),0) + 1;
+      entries.unshift({
+        id: maxId,
+        version: entries[0]?.version || "1.0.0",
+        date: new Date().toISOString().slice(0,10),
+        kind: "fix",
+        platform: ["PC"],
+        title: "Hotfix (demo)",
+        summary: "Demo entry added locally.",
+        details: "This demonstrates live updates without reload. Replace with your backend.",
+        tags: ["demo","hotfix"]
+      });
+      render();
+    });
+
+    // ===== Rendering =====
+    function renderChips(containerId, items, stateKey){
+      const box = byId(containerId);
+      box.innerHTML = "";
+      items.sort(Intl.Collator().compare).forEach(val=>{
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = val[0].toUpperCase() + val.slice(1);
+        btn.setAttribute('role','switch');
+        btn.setAttribute('aria-pressed', String(state[stateKey].includes(val)));
+        btn.addEventListener('click', ()=>{
+          const on = !(btn.getAttribute('aria-pressed') === 'true');
+          btn.setAttribute('aria-pressed', String(on));
+          if (on) state[stateKey] = [...new Set([...state[stateKey], val])];
+          else state[stateKey] = state[stateKey].filter(x=>x!==val);
+          syncUrl(); render();
+        });
+        box.appendChild(btn);
+      });
+    }
+
+    function applyTheme(theme){
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.setProperty('color-scheme', theme);
+    }
+
+    function loadStateFromUrl(){
+      const url = new URL(location.href);
+      const s = decode(url.searchParams.get('s') || "") || {};
+      // Allow plain query param ?q=…
+      if (url.searchParams.get('q')) s.q = url.searchParams.get('q');
+      return {...defaultState, ...s};
+    }
+
+    function syncUrl(){
+      const url = new URL(location.href);
+      const s = {...state}; // shallow clone
+      url.searchParams.set('s', encode({
+        q: s.q, kinds: s.kinds, platforms:s.platforms, tags:s.tags,
+        from:s.from, to:s.to, view:s.view, theme:s.theme
+      }));
+      history.replaceState(null,"",url);
+    }
+
+    function matchesFilters(e){
+      const q = state.q.toLowerCase();
+      const text = [e.title, e.summary, e.details, e.tags.join(','), e.platform.join(',')].join(' ').toLowerCase();
+      const kindOk = state.kinds.length ? state.kinds.includes(e.kind) : true;
+      const platOk = state.platforms.length ? e.platform.some(p=>state.platforms.includes(p)) : true;
+      const tagsOk = state.tags.length ? e.tags.some(t=>state.tags.includes(t)) : true;
+      const qOk = q ? text.includes(q) || String(e.id) === q : true;
+      const fromOk = state.from ? e.date >= state.from : true;
+      const toOk = state.to ? e.date <= state.to : true;
+      return kindOk && platOk && tagsOk && qOk && fromOk && toOk;
+    }
+
+    function render(){
+      const host = byId('timeline');
+      const empty = byId('empty');
+      host.innerHTML = "";
+      const filtered = entries.filter(matchesFilters);
+      if (!filtered.length){ empty.hidden = false; return; } else empty.hidden = true;
+
+      // Group by version if requested
+      if (state.view === "grouped"){
+        const groups = Object.groupBy ? Object.groupBy(filtered, e=>e.version)
+          : filtered.reduce((acc,e)=>((acc[e.version]=acc[e.version]||[]).push(e),acc),{});
+        Object.keys(groups).sort((a,b)=>cmpSemverDesc(a,b)).forEach(ver=>{
+          host.appendChild(renderVersionCard(ver, groups[ver]));
+        });
+      } else {
+        filtered.sort((a,b)=> (b.date.localeCompare(a.date) || b.id - a.id));
+        const flatContainer = document.createElement('div');
+        flatContainer.className = 'version';
+        flatContainer.appendChild(versionHeader('All Entries', `${filtered.length} items`));
+        const list = document.createElement('div'); list.className='entries';
+        filtered.forEach(e=> list.appendChild(renderEntry(e)));
+        flatContainer.appendChild(list);
+        host.appendChild(flatContainer);
+      }
+
+      // If URL has a hash to an entry, reveal it
+      if (location.hash.startsWith('#entry-')){
+        const el = $(location.hash);
+        if (el){ el.setAttribute('aria-expanded','true'); el.scrollIntoView({behavior:'smooth', block:'center'}); flash(el); }
+      }
+    }
+
+    function versionHeader(title, subtitle){
+      const head = document.createElement('div');
+      head.className = 'version-header';
+      const meta = document.createElement('div');
+      meta.className = 'v-meta';
+      const h2 = document.createElement('h2'); h2.textContent = title; h2.style.margin='0';
+      const badge = document.createElement('span'); badge.className='badge'; badge.textContent = subtitle;
+      meta.append(h2,badge);
+      const tags = document.createElement('div');
+      tags.innerHTML = `
+        <span class="tag new">New</span>
+        <span class="tag change">Changed</span>
+        <span class="tag fix">Fixed</span>
+        <span class="tag balance">Balance</span>
+      `;
+      head.append(meta, tags);
+      return head;
+    }
+
+    function renderVersionCard(version, list){
+      const card = document.createElement('article');
+      card.className = 'version';
+      const header = versionHeader(`Version ${version}`, `${list.length} items · ${fmtDate(list[0].date)}`);
+      card.appendChild(header);
+
+      const entriesWrap = document.createElement('div');
+      entriesWrap.className = 'entries';
+      list.sort((a,b)=> (b.kind.localeCompare(a.kind) || b.id - a.id));
+      list.forEach(e=> entriesWrap.appendChild(renderEntry(e)));
+      card.appendChild(entriesWrap);
+      return card;
+    }
+
+    function renderEntry(e){
+      const item = document.createElement('article');
+      item.className = 'entry';
+      item.id = `entry-${e.id}`;
+      item.dataset.kind = e.kind;
+      item.setAttribute('aria-expanded','false');
+      item.setAttribute('tabindex','0');
+      item.addEventListener('keydown', (ev)=>{ if (ev.key === 'Enter') { toggleEntry(item); } });
+
+      const header = document.createElement('header');
+      header.innerHTML = `
+        <span class="type" aria-hidden="true"></span>
+        <h4>${escapeHtml(e.title)}</h4>
+      `;
+      const meta = document.createElement('div'); meta.className = 'meta';
+      meta.innerHTML = `
+        <span>#${e.id}</span>
+        <span>•</span>
+        <span>${fmtDate(e.date)}</span>
+        <span>•</span>
+        <span>${e.version}</span>
+        <span>•</span>
+        <span>${e.platform.join(', ')}</span>
+      `;
+      const content = document.createElement('div'); content.className = 'content';
+      content.innerHTML = `
+        <div class="muted">${escapeHtml(e.summary)}</div>
+        <p>${escapeHtml(e.details)}</p>
+      `;
+      const labels = document.createElement('div'); labels.className='labels';
+      e.tags.forEach(t=>{
+        const s = document.createElement('span'); s.className='label'; s.textContent = t;
+        s.addEventListener('click', ()=>{
+          if (!state.tags.includes(t)){ state.tags.push(t); renderChips('tagChips', tags, 'tags'); syncUrl(); render(); }
+        });
+        labels.appendChild(s);
+      });
+
+      const actions = document.createElement('div'); actions.className='actions';
+      const btnToggle = document.createElement('button'); btnToggle.className='toggle'; btnToggle.title='Toggle details';
+      btnToggle.addEventListener('click', ()=> toggleEntry(item));
+      const btnLink = document.createElement('button'); btnLink.title='Copy link';
+      btnLink.textContent = '🔗';
+      btnLink.addEventListener('click', ()=>{
+        const url = new URL(location.href); url.hash = item.id;
+        navigator.clipboard?.writeText(url.toString());
+        flash(item);
+      });
+      actions.append(btnToggle, btnLink);
+
+      item.append(header, meta, content, labels, actions);
+      return item;
+    }
+
+    function toggleEntry(item){
+      const val = item.getAttribute('aria-expanded') === 'true' ? 'false' : 'true';
+      item.setAttribute('aria-expanded', val);
+    }
+
+    function flash(el){
+      el.animate([{boxShadow:'0 0 0 0 rgba(102,224,255,0.9)'},{boxShadow:'0 0 0 14px rgba(102,224,255,0)'}],{duration:700, easing:'ease-out'});
+    }
+
+    function cmpSemverDesc(a,b){
+      const pa = a.split('.').map(Number), pb = b.split('.').map(Number);
+      for (let i=0;i<3;i++){ if ((pb[i]||0)!==(pa[i]||0)) return (pb[i]||0)-(pa[i]||0); }
+      return 0;
+    }
+
+    // Simple escaping for text nodes we inject
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+    // Initial render
+    render();
+
+    // ===== Handle hashchange (deep link) =====
+    window.addEventListener('hashchange', ()=>{
+      const el = $(location.hash);
+      if (el){ el.setAttribute('aria-expanded','true'); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+    });
+
+    // ===== Accessibility niceties =====
+    // When focus leaves entry actions, ensure focus ring can be seen
+    document.addEventListener('focusin', (e)=>{
+      if (e.target.closest('.entry')) e.target.closest('.entry').style.outline = 'var(--outline)';
+    });
+    document.addEventListener('focusout', (e)=>{
+      if (e.target.closest('.entry')) e.target.closest('.entry').style.outline = 'none';
+    });
+  })();
+  </script>
+</body>
+</html>
